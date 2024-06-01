@@ -61,4 +61,4 @@ For convenience, the script can be converted to a PDF file using Pandoc and `pdf
 
 This project is licensed under the MIT License - see the LICENSE file for details.
 
-Feel free to contribute to this project by opening issues and submitting pull requests. For more details, refer to the project's documentation and usage guidelines in the repository.
+Feel free to contribute to this project by opening issues and submitting pull requests, or send me a message!
