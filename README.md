@@ -56,6 +56,8 @@ For convenience, the script can be converted to a PDF file using Pandoc and `pdf
    ```sh
    pandoc DNA_Fountain_Project_1.html -o DNA_Fountain_Project_1.pdf
    ```
+### Picture representation of project
+![image](https://github.com/Felixburton7/CSE-487-Advanced-Systems-and-Synthetic-Biology-/assets/106174577/31b1c46d-e30e-4eee-8700-47b9d9617971)
 
 ### License
 
