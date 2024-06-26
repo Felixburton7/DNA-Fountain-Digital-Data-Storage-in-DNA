@@ -1,6 +1,6 @@
-# CSE-487-Advanced-Systems-and-Synthetic-Biology-
+# CSE 487 Advanced Systems and Synthetic Biology
 
-### Summary for the DNA Fountain Project
+### Summary for the DNA Fountain Project - DNA Digital Data Storage
 
 This repository contains a Python script for a DNA Fountain project, which demonstrates the encoding and processing of digital data into DNA sequences for potential digital storage applications. The script performs the following tasks:
 
