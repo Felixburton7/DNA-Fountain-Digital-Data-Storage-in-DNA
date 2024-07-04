@@ -1,4 +1,4 @@
-'''Summary of the process (My Attempt) 
+'''Summary of the process 
 
 This script decodes DNA droplet information back to its original message. It begins by loading and parsing the luby_blocks.csv file to identify which blocks of information are encoded in each droplet. It then decodes the DNA sequences from the droplet_sequences.fasta file (dropley_sequences.txt file in this case) into binary format using a specified encoding scheme (A -> 00, G -> 01, C -> 10, T -> 11). Each droplet's binary sequence is divided into three parts: Luby Index (16 bits), Droplet Message (256 bits), and Error Correction Code (16 bits). The Luby Index and Droplet Message are extracted and stored.
 
