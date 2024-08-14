@@ -20,7 +20,7 @@ This projects contains a Python script for a project centered around DNA Fountai
    - Outputs the encoded DNA sequences and provides a final decoded message.
 
 The script is designed to explore the potential of DNA as a medium for digital data storage, showcasing the feasibility and challenges of encoding and decoding digital information using biological molecules.
-
+#
 ### Usage
 
 To run the script:
@@ -58,6 +58,7 @@ For convenience, the script can be converted to a PDF file using Pandoc and `pdf
    ```
 ### Picture representation of project
 ![image](https://github.com/Felixburton7/CSE-487-Advanced-Systems-and-Synthetic-Biology-/assets/106174577/31b1c46d-e30e-4eee-8700-47b9d9617971)
+
 
 ### License
 
