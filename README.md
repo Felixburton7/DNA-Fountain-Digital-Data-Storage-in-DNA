@@ -2,7 +2,7 @@
 
 ### Summary for the DNA Fountain Project - DNA Digital Data Storage
 
-This projects contains a Python script for a project centered around DNA Fountain technology, which demonstrates the encoding and processing of digital data into DNA sequences for potential digital storage applications. The script performs the following tasks:
+This repo contains a Python script for a project centered around DNA Fountain technology, which demonstrates the encoding and processing of digital data into DNA sequences for potential digital storage applications. The script performs the following tasks:
 
 1. **Data Encoding:**
    - Encodes digital data into DNA sequences using a predefined encoding scheme.
