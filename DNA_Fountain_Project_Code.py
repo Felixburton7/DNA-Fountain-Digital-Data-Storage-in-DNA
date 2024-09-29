@@ -7,8 +7,6 @@
 
 # ## Imports
 
-# In[19]:
-
 
 from Bio import SeqIO
 import pandas as pd
@@ -19,8 +17,6 @@ from nltk.corpus import words
 # ## Reading Files
 
 # ### Reading sequence records from fasta
-
-# In[20]:
 
 
 records = [r  for r in SeqIO.parse("droplet_sequences.fasta", "fasta")]
@@ -45,8 +41,6 @@ blocks = [list(set(extract_blocks(entry))) for entry in blocks_raw]
 print(blocks_raw[0:3])
 blocks[0:3] 
 
-
-
 # ### Checking consistency between imports
 
 # In[22]:
@@ -58,14 +52,9 @@ degrees_fasta = [list(re.split('d', r.name))[-1] for r in records]
 print(f"Consistent: {degrees_csv == degrees_fasta}")
 [[degrees_csv[i],degrees_fasta[i]] for i in range(len(degrees_csv))][0:6]
 
-
-# Although the encoded blocks in the csv don't match with the names in the fasta, I'll go forward for now using the blocks listed in the csv
-
 # ## Decoding droplets
 
 # ### Double-checking reduncancy and counting number of blocks
-
-# In[23]:
 
 
 #Finding the total number of blocks encoded
@@ -78,9 +67,6 @@ print(f"{number_of_drops} droplets created\n"f"{number_of_drops/number_of_blocks
 
 
 # ### Decoding 0-degree blocks as a sanity check 
-
-# In[24]:
-
 
 #Finding which droplets have index degree
 zero_deg_inds = [i for i in range(len(degrees_csv)) if degrees_csv[i] == 0]
@@ -153,11 +139,9 @@ zero_deg_messages = [decode_luby_drop(s) for s in zero_deg_binary]
 zero_deg_messages
 
 
-# How should I deal with broken reads? I think checking for the presence of '\x00' will be a sufficient heuristic. (It turns out i also needed a heuristic to rule out some that didnt have null characters and had gibberish words by comparing against an english word dictionary)
+# How should I deal with broken reads? Checking for the presence of '\x00' will be a sufficient heuristic. (It turns out i also needed a heuristic to rule out some that didnt have null characters and had gibberish words by comparing against an english word dictionary)
 
 # ## Decoding blocks based on queue of non-processed droplets
-
-# In[25]:
 
 
 #Storing the fully decoded binaries in a dictionary
@@ -179,8 +163,6 @@ for i,k in enumerate(decoded.keys()):
 for d in deletes:
     del decoded[d]
 
-
-
 #Converting text to int in list
 def to_int(l):
     return([int(i) for i in l])
@@ -192,7 +174,6 @@ while len(decoded) < number_of_blocks :
 #for i in range(100):
     #Get the list of droplets that are already decoded
     decoded_block_nums = [int(i) for i in list(decoded.keys())]
-
 
     #Determine which blocks are able to be decoded based on whats already been decoded
     
@@ -224,17 +205,12 @@ while len(decoded) < number_of_blocks :
     print(f"*{len(decoded)}*")
 
 
-
-
 x = list(decoded.keys())
 x.sort()
 print([i for i in range(number_of_blocks) if not i in x])
 
 
 # ## Assembling message
-
-# In[26]:
-
 
 message = ""
 
@@ -248,14 +224,6 @@ with open('decoded_message.txt', 'wt', encoding='utf-8') as file:
     # Write the string to the file
     file.write(message)
 
-
-# In[ ]:
-
-
-
-
-
-# In[ ]:
 
 
 
