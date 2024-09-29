@@ -1,165 +1,262 @@
-'''Summary of the process 
+#!/usr/bin/env python
+# coding: utf-8
 
-This script decodes DNA droplet information back to its original message. It begins by loading and parsing the luby_blocks.csv file to identify which blocks of information are encoded in each droplet. It then decodes the DNA sequences from the droplet_sequences.fasta file (dropley_sequences.txt file in this case) into binary format using a specified encoding scheme (A -> 00, G -> 01, C -> 10, T -> 11). Each droplet's binary sequence is divided into three parts: Luby Index (16 bits), Droplet Message (256 bits), and Error Correction Code (16 bits). The Luby Index and Droplet Message are extracted and stored.
+# # Challenge 1 - DNA Fountain
+# 
+# Felix Burton 
 
-Using the Luby Transform, the script reconstructs the original blocks from the droplet messages by performing XOR operations where necessary. During the reconstruction, any unexpected DNA bases are ignored, ensuring only valid sequences are processed. The script handles cases where block indices are out of range by skipping those droplets. After decoding each droplet's message, the script combines the blocks to form the final binary message.
+# ## Imports
 
-Finally, the binary message is converted back to text, completing the decoding process. The script prints intermediate steps and final results for verification, including the decoded binary sequences and the final text message. This comprehensive approach ensures accurate reconstruction of the original message from the encoded DNA droplets.
-
-
-Goal: Decode the DNA droplet information back to the original message by reversing the Luby Transform.
-
-Input Files that I used in the code below:
-luby_blocks.csv: Identifies which blocks of information are encoded in each droplet.
-droplet_sequences.txt: Contains the sequencing results of the DNA droplets, from the fasta file you gave us. 
-Encoding Scheme:
-A -> 00
-G -> 01
-C -> 10
-T -> 11
-
-Droplet Structure: Each droplet consists of:
-Luby Index (16 bits)
-Droplet Message (256 bits)
-Error Correction Code (16 bits).'''
+# In[19]:
 
 
-# Import necessary libraries
+from Bio import SeqIO
 import pandas as pd
+import re
+import nltk
+from nltk.corpus import words
 
-# Load the CSV file into a DataFrame with correct splitting
-csv_file_path = 'luby_blocks.csv'
-df = pd.read_csv(csv_file_path, header=None, names=['drop'])
+# ## Reading Files
 
-# Split the 'drop' column into separate 'drop' and 'blocks' columns
-df['blocks'] = df['drop'].apply(lambda x: x.split(' - blocks: ')[1])
-df['drop'] = df['drop'].apply(lambda x: x.split(' - blocks: ')[0])
+# ### Reading sequence records from fasta
 
-# Display the first few rows and column names of the DataFrame to verify the structure
-print(df.head())
-print(df.columns)
-
-# Define a function to convert DNA sequence to binary
+# In[20]:
 
 
-def dna_to_binary(dna_sequence):
-    encoding = {'A': '00', 'G': '01', 'C': '10', 'T': '11'}
-    binary_sequence = []
-    for base in dna_sequence:
-        if base in encoding:
-            binary_sequence.append(encoding[base])
-        else:
-            print(
-                f"Warning: Unexpected base '{base}' found. Ignoring this base.")
-    return ''.join(binary_sequence)
+records = [r  for r in SeqIO.parse("droplet_sequences.fasta", "fasta")]
+records[0:3]
 
 
-# Load and parse the droplet_sequences.txt file (fasta)
-sequences = {}
-fasta_file_path = 'droplet_sequences.txt'
-try:
-    with open(fasta_file_path, mode='r') as file:
-        droplet_number = ''
-        for line in file:
-            if line.startswith('>'):
-                header = line.strip()
-                droplet_number = header.split('_')[1][1:]
-            else:
-                sequence = line.strip()
-                binary_sequence = dna_to_binary(sequence)
-                sequences[droplet_number] = binary_sequence
+# ### Reading block encodings
 
-    # Display a few decoded sequences for verification
-    for key, value in list(sequences.items())[:5]:
-        # Print the first 64 bits for brevity
-        print(f"Droplet {key}: {value[:64]}...")
-except FileNotFoundError:
-    print(f"File not found: {fasta_file_path}")
-
-# Defined function to extract parts from binary sequence
+# In[21]:
 
 
-def extract_parts(binary_sequence):
-    luby_index = binary_sequence[:16]
-    droplet_message = binary_sequence[16:272]
-    error_correction_code = binary_sequence[272:]
-    return luby_index, droplet_message, error_correction_code
+# Read the CSV file and extract the blocks column
+blocks_raw = pd.read_csv('luby_blocks.csv', header=None)[0]
+
+# Define a function to extract blocks from each entry
+def extract_blocks(entry):
+    return re.findall(r'\b\d+\b', entry)
+
+# Extract blocks from each entry using the defined function
+blocks = [list(set(extract_blocks(entry))) for entry in blocks_raw]
+
+print(blocks_raw[0:3])
+blocks[0:3] 
 
 
-# Create a dictionary to hold the extracted parts for each droplet
-droplet_data = {}
-for droplet_number, binary_sequence in sequences.items():
-    luby_index, droplet_message, error_correction_code = extract_parts(
-        binary_sequence)
-    droplet_data[droplet_number] = {
-        'luby_index': luby_index,
-        'droplet_message': droplet_message,
-        'error_correction_code': error_correction_code
-    }
 
-# Display a few extracted parts for verification
-for key, value in list(droplet_data.items())[:5]:
-    print(
-        f"Droplet {key}: Luby Index - {value['luby_index']}, Droplet Message - {value['droplet_message'][:64]}...")
+# ### Checking consistency between imports
 
-# Initialize an array to hold the blocks
-n_blocks = 56  # Number of unique blocks of information
-blocks = [None] * n_blocks
-
-# Define function to XOR two binary strings
+# In[22]:
 
 
-def xor_binary_strings(str1, str2):
-    return ''.join(['0' if bit1 == bit2 else '1' for bit1, bit2 in zip(str1, str2)])
+degrees_csv = [len(b) -  1 for b in blocks]
+degrees_fasta = [list(re.split('d', r.name))[-1] for r in records]
+
+print(f"Consistent: {degrees_csv == degrees_fasta}")
+[[degrees_csv[i],degrees_fasta[i]] for i in range(len(degrees_csv))][0:6]
 
 
-# Decode the blocks using the droplet data
-for droplet_number, data in droplet_data.items():
-    try:
-        # Debug print to check the droplet number being processed
-        print(f"Processing droplet: {droplet_number}")
+# Although the encoded blocks in the csv don't match with the names in the fasta, I'll go forward for now using the blocks listed in the csv
 
-        block_indices_str = df[df['drop'] ==
-                               f'drop_n{droplet_number}']['blocks'].values
-        if len(block_indices_str) == 0:
-            raise IndexError(
-                f"No block indices found for droplet {droplet_number}")
+# ## Decoding droplets
 
-        block_indices = list(
-            map(int, block_indices_str[0].strip('[]').split(', ')))
-        print(f"Droplet {droplet_number}: Blocks {block_indices}")
-    except IndexError as e:
-        print(f"Error processing droplet {droplet_number}: {e}")
-        continue
+# ### Double-checking reduncancy and counting number of blocks
 
-    decoded_message = data['droplet_message']
-
-    for index in block_indices:
-        if index >= n_blocks:
-            print(
-                f"Error: Block index {index} is out of range for droplet {droplet_number}")
-            continue
-
-        if blocks[index] is None:
-            blocks[index] = decoded_message
-        else:
-            blocks[index] = xor_binary_strings(blocks[index], decoded_message)
-
-# Combine the blocks to form the final message
-final_binary_message = ''.join(block for block in blocks if block is not None)
-print(final_binary_message)
-
-# Define function to convert binary to text
+# In[23]:
 
 
-def binary_to_text(binary_message):
-    text = ''
-    for i in range(0, len(binary_message), 8):
-        byte = binary_message[i:i+8]
-        text += chr(int(byte, 2))
-    return text
+#Finding the total number of blocks encoded
+number_of_blocks = max([int(i) for j in blocks for i in j]) + 1
+print(f"{number_of_blocks} total blocks encoded")
+
+#Finding the total number of droplets used
+number_of_drops = len(blocks)
+print(f"{number_of_drops} droplets created\n"f"{number_of_drops/number_of_blocks}-fold redundancy")
 
 
-# Convert the final binary message to text
-final_text_message = binary_to_text(final_binary_message)
-print(final_text_message)
+# ### Decoding 0-degree blocks as a sanity check 
+
+# In[24]:
+
+
+#Finding which droplets have index degree
+zero_deg_inds = [i for i in range(len(degrees_csv)) if degrees_csv[i] == 0]
+print(f"Indices of droplets with degree-0: {zero_deg_inds}")
+
+#A helper function for slicing arrays using a list of indices
+def slc(lst, inds):
+    rArray = []
+    for i in inds:
+        rArray += [lst[i]]
+    return rArray
+    
+
+#A dictionary for decoding sequences into binary
+decode_dict = {
+    'A' : '00',
+    'G' : '01',
+    'C' : '10',
+    'T' : '11'
+}
+
+#Starting by decoding these droplets directly
+zero_deg_drops = [s.seq for s in slc(records, zero_deg_inds)]
+decoded_blocks = [int(i[0]) for i in slc(blocks, zero_deg_inds)]
+
+#Helper for converting a DNA seq to binary
+def decode(s):
+    return "".join([decode_dict[c] for c in s])
+
+# Converting each sequence to binary
+zero_deg_binary = [decode(s) for s in zero_deg_drops]
+
+#Function for Xor of strings for decoding
+def xor(str1, str2):
+    # Convert binary strings to integers
+    int1 = int(str1, 2)
+    int2 = int(str2, 2)
+    
+    # Perform XOR operation
+    result_int = int1 ^ int2
+    
+    # Convert result back to binary string
+    result_str = bin(result_int)[2:]  # Remove '0b' prefix
+    
+    # Pad with leading zeros if necessary
+    result_str = result_str.zfill(max(len(str1), len(str2)))
+    
+    return result_str
+
+#Function for decoding a binary string
+def decode_luby_drop(s):
+    
+    payload = s[16:len(s)-16]
+    payload_size = (len(s)-32)//8
+
+
+
+    return ''.join(chr(int(payload[8*i : 8*i + 8],2)) for i in range(payload_size))
+
+#Get luby index of a droplet
+def get_index(d):
+    
+    payload = d[0:16]
+
+    return int(payload,2)
+
+
+print(decoded_blocks)
+zero_deg_messages = [decode_luby_drop(s) for s in zero_deg_binary]
+zero_deg_messages
+
+
+# How should I deal with broken reads? I think checking for the presence of '\x00' will be a sufficient heuristic. (It turns out i also needed a heuristic to rule out some that didnt have null characters and had gibberish words by comparing against an english word dictionary)
+
+# ## Decoding blocks based on queue of non-processed droplets
+
+# In[25]:
+
+
+#Storing the fully decoded binaries in a dictionary
+decoded = {decoded_blocks[i] : zero_deg_binary[i] for i in range(len(decoded_blocks))}
+bad_droplets = []
+
+
+#A heuristic function that checks for english words
+def contains_word(sentence):
+    ret = any([wrd in words.words()for wrd in sentence.split()])
+    return ret
+
+#check for any broken decryptions
+deletes = []
+for i,k in enumerate(decoded.keys()):
+        if '\x00' in decode_luby_drop(decoded[k]):
+            deletes += [k]
+            bad_droplets += [zero_deg_inds[i]]
+for d in deletes:
+    del decoded[d]
+
+
+
+#Converting text to int in list
+def to_int(l):
+    return([int(i) for i in l])
+
+
+#Loop for decoding droplets based on the decoding of smaller order droplets
+while len(decoded) < number_of_blocks :
+#while len(possible) > 0:    
+#for i in range(100):
+    #Get the list of droplets that are already decoded
+    decoded_block_nums = [int(i) for i in list(decoded.keys())]
+
+
+    #Determine which blocks are able to be decoded based on whats already been decoded
+    
+    possible = [[e,[i for i in to_int(blocks[e]) if i in (set(to_int(blocks[e])) & set(decoded_block_nums))],[i for i in to_int(blocks[e]) if not(i in decoded_block_nums)][0]] for e in range(number_of_drops) if len([i for i in to_int(blocks[e]) if not(i in decoded_block_nums)]) == 1 and not list(set(to_int(blocks[e])) - set(decoded_block_nums))[0] in decoded_block_nums and not(e in bad_droplets)]
+
+    for e in possible:
+        drop = records[e[0]].seq
+        binary = decode(drop)
+        for pair in e[1]:
+            binary = xor(binary, decoded[pair])
+        decoded[e[2]] = binary
+        if '\x00' in decode_luby_drop(binary)or not(contains_word(decode_luby_drop(binary))):
+            print(e[2])
+            print('bad',e)
+            print(decode_luby_drop(binary))
+            print('-------')
+            bad_droplets += [e[0]]
+
+
+    #Clean up any mis-decoded droplets
+    deletes = []
+    for k in decoded.keys():       
+        if ('\x00' in decode_luby_drop(decoded[k]) and not('technology'in decode_luby_drop(decoded[k]))) or not(contains_word(decode_luby_drop(decoded[k]))):
+            deletes += [k]
+    print(deletes)
+    for d in deletes:
+        del decoded[d]
+
+    print(f"*{len(decoded)}*")
+
+
+
+
+x = list(decoded.keys())
+x.sort()
+print([i for i in range(number_of_blocks) if not i in x])
+
+
+# ## Assembling message
+
+# In[26]:
+
+
+message = ""
+
+for i in range(len(decoded)):
+    chunk = decode_luby_drop(decoded[i])
+    print(i,chunk)
+    message += chunk
+message = message.replace('\x00', '')
+# Open the file in write mode ('w'), this will overwrite the file if it already exists
+with open('decoded_message.txt', 'wt', encoding='utf-8') as file:
+    # Write the string to the file
+    file.write(message)
+
+
+# In[ ]:
+
+
+
+
+
+# In[ ]:
+
+
+
+
