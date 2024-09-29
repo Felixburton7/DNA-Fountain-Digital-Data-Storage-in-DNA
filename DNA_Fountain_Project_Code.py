@@ -1,6 +1,3 @@
-#!/usr/bin/env python
-# coding: utf-8
-
 # # Challenge 1 - DNA Fountain
 # 
 # Felix Burton 
@@ -25,8 +22,6 @@ records[0:3]
 
 # ### Reading block encodings
 
-# In[21]:
-
 
 # Read the CSV file and extract the blocks column
 blocks_raw = pd.read_csv('luby_blocks.csv', header=None)[0]
@@ -42,9 +37,6 @@ print(blocks_raw[0:3])
 blocks[0:3] 
 
 # ### Checking consistency between imports
-
-# In[22]:
-
 
 degrees_csv = [len(b) -  1 for b in blocks]
 degrees_fasta = [list(re.split('d', r.name))[-1] for r in records]
