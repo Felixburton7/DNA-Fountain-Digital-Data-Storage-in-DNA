@@ -62,6 +62,7 @@ For convenience, the script can be converted to a PDF file using Pandoc and `pdf
 
 ### License
 
+
 This project is licensed under the MIT License - see the LICENSE file for details.
 
 Feel free to contribute to this project by opening issues and submitting pull requests, or send me a message at felixburton2002@gmail.com
